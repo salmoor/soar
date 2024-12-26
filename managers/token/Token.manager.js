@@ -25,20 +25,21 @@ module.exports = class TokenManager {
      * long token contains immutable data and long lived
      * master key must exists on any device to create short tokens
      */
-    genLongToken({userId, userKey}){
+    genLongToken({userId, userKey, role}){
         return jwt.sign(
             { 
                 userKey, 
                 userId,
+                role
             }, 
             this.config.dotEnv.LONG_TOKEN_SECRET, 
             {expiresIn: this.longTokenExpiresIn
         })
     }
 
-    genShortToken({userId, userKey, sessionId, deviceId}){
+    genShortToken({userId, userKey, sessionId, deviceId, role}){
         return jwt.sign(
-            { userKey, userId, sessionId, deviceId}, 
+            { userKey, userId, sessionId, deviceId, role}, 
             this.config.dotEnv.SHORT_TOKEN_SECRET, 
             {expiresIn: this.shortTokenExpiresIn
         })
@@ -72,6 +73,7 @@ module.exports = class TokenManager {
             userKey: decoded.userKey,
             sessionId: nanoid(),
             deviceId: md5(__device),
+            role: decoded.role
         });
 
         return { shortToken };

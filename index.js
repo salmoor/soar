@@ -15,6 +15,10 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1)
 })
 
+if (config.dotEnv.MONGO_URI) {
+    require('./connect/mongo')({ uri: config.dotEnv.MONGO_URI });
+}
+
 const cache      = require('./cache/cache.dbh')({
     prefix: config.dotEnv.CACHE_PREFIX ,
     url: config.dotEnv.CACHE_REDIS
