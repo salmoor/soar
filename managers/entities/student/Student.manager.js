@@ -1,13 +1,11 @@
-const mongoose = require('mongoose');
-const Student = require('./student.mongoModel');
-const Classroom = require('../classroom/classroom.mongoModel');
-
 module.exports = class StudentManager {
-    constructor({ cache, config, managers, validators }) {
+    constructor({ cache, config, managers, validators, mongomodels }) {
         this.cache = cache;
         this.config = config;
         this.validators = validators;
         this.responseDispatcher = managers.responseDispatcher;
+        this.student = mongomodels.student;
+        this.classroom = mongomodels.classroom;
 
         // Expose HTTP endpoints
         this.httpExposed = [
@@ -36,14 +34,14 @@ module.exports = class StudentManager {
 
             // If classroomId is provided, verify it belongs to the school
             if (classroomId) {
-                const classroom = await Classroom.findById(classroomId);
+                const classroom = await this.classroom.findById(classroomId);
                 if (!classroom || classroom.schoolId.toString() !== schoolId) {
                     return { error: 'Invalid classroom ID or classroom does not belong to the school' };
                 }
             }
 
             // Create new student
-            const student = new Student({
+            const student = new this.student({
                 firstName,
                 lastName,
                 email,
@@ -75,7 +73,7 @@ module.exports = class StudentManager {
                 return { error: 'Authentication required' };
             }
 
-            const student = await Student.findById(__query.studentId)
+            const student = await this.student.findById(__query.studentId)
                 .populate('schoolId', 'name')
                 .populate('classroomId', 'name');
 
@@ -118,14 +116,14 @@ module.exports = class StudentManager {
                 filter.classroomId = __query.classroomId;
             }
 
-            const students = await Student.find(filter)
+            const students = await this.student.find(filter)
                 .populate('schoolId', 'name')
                 .populate('classroomId', 'name')
                 .skip(skip)
                 .limit(limit)
                 .sort({ lastName: 1, firstName: 1 });
 
-            const total = await Student.countDocuments(filter);
+            const total = await this.student.countDocuments(filter);
 
             return {
                 data: students,
@@ -148,7 +146,7 @@ module.exports = class StudentManager {
                 return { error: 'Authentication required' };
             }
 
-            const student = await Student.findById(studentId);
+            const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
@@ -160,7 +158,7 @@ module.exports = class StudentManager {
 
             // If updating classroom, verify it belongs to the same school
             if (classroomId) {
-                const classroom = await Classroom.findById(classroomId);
+                const classroom = await this.classroom.findById(classroomId);
                 if (!classroom || classroom.schoolId.toString() !== student.schoolId.toString()) {
                     return { error: 'Invalid classroom ID or classroom does not belong to the school' };
                 }
@@ -173,7 +171,7 @@ module.exports = class StudentManager {
             if (email) updateData.email = email;
             if (classroomId) updateData.classroomId = classroomId;
 
-            const updatedStudent = await Student.findByIdAndUpdate(
+            const updatedStudent = await this.student.findByIdAndUpdate(
                 studentId,
                 { $set: updateData },
                 { new: true }
@@ -196,7 +194,7 @@ module.exports = class StudentManager {
                 return { error: 'Authentication required' };
             }
 
-            const student = await Student.findById(__query.studentId);
+            const student = await this.student.findById(__query.studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
@@ -207,7 +205,7 @@ module.exports = class StudentManager {
             }
 
             // Perform hard delete
-            await Student.findByIdAndDelete(__query.studentId);
+            await this.student.findByIdAndDelete(__query.studentId);
 
             return {
                 message: 'Student deleted successfully',
@@ -226,7 +224,7 @@ module.exports = class StudentManager {
                 return { error: 'Authentication required' };
             }
 
-            const student = await Student.findById(studentId);
+            const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
@@ -269,7 +267,7 @@ module.exports = class StudentManager {
                 return { error: 'Authentication required' };
             }
 
-            const student = await Student.findById(studentId);
+            const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
@@ -280,7 +278,7 @@ module.exports = class StudentManager {
             }
 
             // Verify classroom exists and belongs to the same school
-            const classroom = await Classroom.findById(classroomId);
+            const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
@@ -289,7 +287,7 @@ module.exports = class StudentManager {
             }
 
             // Check classroom capacity
-            const currentStudentsCount = await Student.countDocuments({
+            const currentStudentsCount = await this.student.countDocuments({
                 classroomId,
                 status: 'active'
             });

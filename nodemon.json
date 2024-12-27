@@ -4,7 +4,7 @@
     "mws/",
     "loaders/",
     "config/",
-    "index.js",
+    "index.js"
   ],
   "ext": "js,json,env",
   "ignore": [

@@ -1,12 +1,10 @@
-const mongoose = require('mongoose');
-const School = require('./school.mongoModel');
-
 module.exports = class SchoolManager {
-    constructor({ cache, config, managers, validators }) {
+    constructor({ cache, config, managers, validators, mongomodels }) {
         this.cache = cache;
         this.config = config;
         this.validators = validators;
         this.responseDispatcher = managers.responseDispatcher;
+        this.school = mongomodels.school;
 
         // Expose HTTP endpoints
         this.httpExposed = [
@@ -27,7 +25,7 @@ module.exports = class SchoolManager {
             }
 
             // Create new school instance
-            const school = new School({
+            const school = new this.school({
                 name,
                 address,
                 contactInfo: {
@@ -56,7 +54,7 @@ module.exports = class SchoolManager {
                 return { error: 'Authentication required' };
             }
 
-            const school = await School.findById(__query.schoolId);
+            const school = await this.school.findById(__query.schoolId);
             if (!school) {
                 return { error: 'School not found' };
             }
@@ -85,12 +83,12 @@ module.exports = class SchoolManager {
 
             const skip = (page - 1) * limit;
             
-            const schools = await School.find()
+            const schools = await this.school.find()
                 .skip(skip)
                 .limit(limit)
                 .sort({ createdAt: -1 });
 
-            const total = await School.countDocuments();
+            const total = await this.school.countDocuments();
 
             return {
                 data: schools,
@@ -127,7 +125,7 @@ module.exports = class SchoolManager {
                 ...(contactInfo && { contactInfo })
             };
 
-            const school = await School.findByIdAndUpdate(
+            const school = await this.school.findByIdAndUpdate(
                 schoolId,
                 { $set: updateData },
                 { new: true }
@@ -154,7 +152,7 @@ module.exports = class SchoolManager {
                 return { error: 'Unauthorized - Superadmin access required' };
             }
 
-            const school = await School.findByIdAndDelete(__query.schoolId);
+            const school = await this.school.findByIdAndDelete(__query.schoolId);
             
             if (!school) {
                 return { error: 'School not found' };

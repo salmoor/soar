@@ -1,12 +1,11 @@
-const mongoose = require('mongoose');
-const Classroom = require('./classroom.mongoModel');
-
 module.exports = class ClassroomManager {
-    constructor({ cache, config, managers, validators }) {
+    constructor({ cache, config, managers, validators, mongomodels }) {
         this.cache = cache;
         this.config = config;
         this.validators = validators;
         this.responseDispatcher = managers.responseDispatcher;
+        this.classroom = mongomodels.classroom;
+        this.school = mongomodels.school;
 
         // Expose HTTP endpoints
         this.httpExposed = [
@@ -38,7 +37,7 @@ module.exports = class ClassroomManager {
             }
 
             // Create new classroom
-            const classroom = new Classroom({
+            const classroom = new this.classroom({
                 name,
                 capacity,
                 resources,
@@ -64,7 +63,7 @@ module.exports = class ClassroomManager {
                 return { error: 'Authentication required' };
             }
 
-            const classroom = await Classroom.findById(__query.classroomId);
+            const classroom = await this.classroom.findById(__query.classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
@@ -103,12 +102,12 @@ module.exports = class ClassroomManager {
             const limit = parseInt(__query.limit) || 10;
             const skip = (page - 1) * limit;
 
-            const classrooms = await Classroom.find({ schoolId })
+            const classrooms = await this.classroom.find({ schoolId })
                 .skip(skip)
                 .limit(limit)
                 .sort({ createdAt: -1 });
 
-            const total = await Classroom.countDocuments({ schoolId });
+            const total = await this.classroom.countDocuments({ schoolId });
 
             return {
                 data: classrooms,
@@ -132,7 +131,7 @@ module.exports = class ClassroomManager {
                 return { error: 'Authentication required' };
             }
 
-            const classroom = await Classroom.findById(classroomId);
+            const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
@@ -153,7 +152,7 @@ module.exports = class ClassroomManager {
                 ...(resources && { resources })
             };
 
-            const updatedClassroom = await Classroom.findByIdAndUpdate(
+            const updatedClassroom = await this.classroom.findByIdAndUpdate(
                 classroomId,
                 { $set: updateData },
                 { new: true }
@@ -176,7 +175,7 @@ module.exports = class ClassroomManager {
                 return { error: 'Authentication required' };
             }
 
-            const classroom = await Classroom.findById(__query.classroomId);
+            const classroom = await this.classroom.findById(__query.classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
@@ -187,7 +186,7 @@ module.exports = class ClassroomManager {
             }
 
             //TODO: Check students, and conditionally disable
-            await Classroom.findByIdAndDelete(__query.classroomId);
+            await this.classroom.findByIdAndDelete(__query.classroomId);
 
             return {
                 message: 'Classroom deleted successfully',
@@ -206,7 +205,7 @@ module.exports = class ClassroomManager {
                 return { error: 'Authentication required' };
             }
 
-            const classroom = await Classroom.findById(classroomId);
+            const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
@@ -244,7 +243,7 @@ module.exports = class ClassroomManager {
                 return { error: 'Authentication required' };
             }
 
-            const classroom = await Classroom.findById(classroomId);
+            const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
