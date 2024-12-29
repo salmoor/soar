@@ -1,4 +1,16 @@
 const layers = {
+    school: {
+        _default: { anyoneCan: 'none' },
+        _public: { anyoneCan: 'none' },
+        
+        classroom: {
+            _default: { inherit: true },
+            
+            student: {
+                _default: { inherit: true }
+            }
+        }
+    },
 
     board: {
 

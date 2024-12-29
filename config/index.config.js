@@ -1,5 +1,9 @@
 
-require('dotenv').config()
+require('dotenv').config({
+    path: process.env.NODE_ENV === 'test' 
+        ? '.env.test'
+        : '.env'
+});
 const os                               = require('os');
 const pjson                            = require('../package.json');
 const utils                            = require('../libs/utils');
