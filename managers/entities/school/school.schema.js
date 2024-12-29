@@ -1,7 +1,7 @@
 module.exports = {
     createSchool: [
         {
-            model: 'text',
+            model: 'longText',
             required: true,
             path: 'name'
         },

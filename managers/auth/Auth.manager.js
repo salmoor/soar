@@ -1,22 +1,10 @@
 const bcrypt = require('bcrypt');
-const mongoose = require('mongoose');
-
-// User Schema
-const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    role: { type: String, enum: ['superadmin', 'schoolAdmin'], required: true },
-    schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: false }, // Only required for schoolAdmin
-    createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', UserSchema);
 
 module.exports = class AuthManager {
-    constructor({ config, managers }) {
+    constructor({ config, managers, mongomodels }) {
         this.config = config;
         this.tokenManager = managers.token;
+        this.user = mongomodels.user;
         
         // Expose HTTP endpoints
         this.httpExposed = [
@@ -41,7 +29,7 @@ module.exports = class AuthManager {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Create user
-            const user = new User({
+            const user = new this.user({
                 username,
                 password: hashedPassword,
                 email,
@@ -51,12 +39,18 @@ module.exports = class AuthManager {
 
             await user.save();
 
+            if (role === 'schoolAdmin') {
+                this.shark.addDirectAccess({
+                    userId: user._id,
+                    nodeId: schoolId,
+                    action: 'create'
+                });
+            }
+
             // Generate tokens
             const longToken = this.tokenManager.genLongToken({
                 userId: user._id,
-                userKey: user.role,
-                role: user.role,
-                ...(user.schoolId && { schoolId: user.schoolId })
+                userKey: user.username,
             });
 
             return {
@@ -81,7 +75,7 @@ module.exports = class AuthManager {
     async login({ username, password }) {
         try {
             // Find user
-            const user = await User.findOne({ username });
+            const user = await this.user.findOne({ username });
             if (!user) {
                 return { error: 'Invalid credentials' };
             }
@@ -95,9 +89,7 @@ module.exports = class AuthManager {
             // Generate tokens
             const longToken = this.tokenManager.genLongToken({
                 userId: user._id,
-                userKey: user.role,
-                role: user.role,
-                ...(user.schoolId && { schoolId: user.schoolId })
+                userKey: user.username
             });
 
             return {

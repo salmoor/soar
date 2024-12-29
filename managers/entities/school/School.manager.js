@@ -16,52 +16,50 @@ module.exports = class SchoolManager {
         ];
     }
 
-    // Create a new school
-    async createSchool({ __longToken, name, address, contactInfo }) {
+    async createSchool({...requestData }) {
         try {
-            // Verify superadmin role
-            if (!__longToken || __longToken.role !== 'superadmin') {
-                return { error: 'Unauthorized - Superadmin access required' };
+            const validator = this.validators.school.createSchool;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
-            // Create new school instance
-            const school = new this.school({
-                name,
-                address,
-                contactInfo: {
-                    email: contactInfo?.email,
-                    phone: contactInfo?.phone
-                }
-            });
+            const schoolData = {
+                ...(requestData.name && { name: requestData.name }),
+                ...(requestData.address && { address: requestData.address }),
+                ...(requestData.contactInfo && { contactInfo: requestData.contactInfo })
+            };
 
-            // Save to database
+            // Create and save school instance
+            const school = new this.school(schoolData);
             const savedSchool = await school.save();
-            
+
             return {
                 message: 'School created successfully',
                 data: savedSchool
             };
         } catch (error) {
             console.error('Create school error:', error);
-            return { error: 'Failed to create school' };
+            return { 
+                error: 'Failed to create school',
+                message: error.message 
+            };
         }
     }
 
     // Get a specific school by ID
-    async getSchool({ __longToken, __query }) {
+    async getSchool({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const school = await this.school.findById(__query.schoolId);
             if (!school) {
                 return { error: 'School not found' };
-            }
-
-            // If school admin, verify they belong to this school
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
-                return { error: 'Unauthorized - Access denied to this school' };
             }
 
             return { data: school };
@@ -72,17 +70,13 @@ module.exports = class SchoolManager {
     }
 
     // Get all schools (superadmin only)
-    async getAllSchools({ __longToken, __query }) {
+    async getAllSchools({ __query }) {
         try {
-            if (!__longToken || __longToken.role !== 'superadmin') {
-                return { error: 'Unauthorized - Superadmin access required' };
-            }
-
             const page = __query.page ?? 1;
             const limit = __query.limit ?? 10;
 
             const skip = (page - 1) * limit;
-            
+
             const schools = await this.school.find()
                 .skip(skip)
                 .limit(limit)
@@ -106,28 +100,20 @@ module.exports = class SchoolManager {
     }
 
     // Update a school
-    async updateSchool({ __longToken, schoolId, name, address, contactInfo }) {
+    async updateSchool({schoolId, ...requestData }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
+            const validator = this.validators.school.createSchool;
+            const validationResult = await validator(requestData);
 
-            // Only superadmin can update any school
-            // School admin can only update their own school
-            if (__longToken.role !== 'superadmin' && 
-                (__longToken.role !== 'schoolAdmin' || __longToken.schoolId !== schoolId)) {
-                return { error: 'Unauthorized - Insufficient permissions' };
-            }
-
-            const updateData = {
-                ...(name && { name }),
-                ...(address && { address }),
-                ...(contactInfo && { contactInfo })
+            const schoolData = {
+                ...(requestData.name && { name: requestData.name }),
+                ...(requestData.address && { address: requestData.address }),
+                ...(requestData.contactInfo && { contactInfo: requestData.contactInfo })
             };
 
             const school = await this.school.findByIdAndUpdate(
                 schoolId,
-                { $set: updateData },
+                { $set: schoolData },
                 { new: true }
             );
 
@@ -146,19 +132,22 @@ module.exports = class SchoolManager {
     }
 
     // Delete a school (superadmin only)
-    async deleteSchool({ __longToken, __query }) {
+    async deleteSchool({ __query }) {
         try {
-            if (!__longToken || __longToken.role !== 'superadmin') {
-                return { error: 'Unauthorized - Superadmin access required' };
-            }
-
             const school = await this.school.findByIdAndDelete(__query.schoolId);
-            
+
             if (!school) {
                 return { error: 'School not found' };
             }
 
-            //TODO -  Check if there are related classrooms
+            const classrooms = await this.classroom.countDocuments({ schoolId: __query.schoolId });
+            if (relatedClassrooms > 0) {
+                return { 
+                    error: 'Cannot delete school',
+                    message: `School has ${classrooms} classroom(s). Please delete or reassign all classrooms before deleting the school.`
+                };
+            }
+
             return {
                 message: 'School deleted successfully',
                 data: school
