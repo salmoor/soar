@@ -16,14 +16,12 @@ module.exports = {
             path: 'email'
         },
         {
-            model: 'id',
+            model: 'schoolId',
             required: true,
-            path: 'schoolId'
         },
         {
-            model: 'id',
+            model: 'classroomId',
             required: false,
-            path: 'classroomId'
         }
     ],
     updateStudent: [

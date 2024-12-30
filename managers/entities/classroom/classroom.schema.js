@@ -16,9 +16,8 @@ module.exports = {
             path: 'resources'
         },
         {
-            model: 'id',
-            required: true,
-            path: 'schoolId'
+            model: 'schoolId',
+            required: true
         }
     ],
     updateClassroom: [

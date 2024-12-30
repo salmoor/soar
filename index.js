@@ -5,6 +5,7 @@ const Aeon = require('aeon-machine');
 
 const createApp = async (options = {}) => {
     const appConfig = { ...config, ...options };
+    const isTest = process.env.NODE_ENV === 'test';
 
     process.on('uncaughtException', err => {
         console.log(`Uncaught Exception:`)
@@ -21,40 +22,53 @@ const createApp = async (options = {}) => {
         require('./connect/mongo')({ uri: appConfig.dotEnv.MONGO_URI });
     }
 
-    const cache = require('./cache/cache.dbh')({
-        prefix: appConfig.dotEnv.CACHE_PREFIX,
-        url: appConfig.dotEnv.CACHE_REDIS
-    });
+    let cache, cortex, oyster, aeon;
 
-    const Oyster = require('oyster-db');
-    const oyster = new Oyster({
-        url: appConfig.dotEnv.OYSTER_REDIS,
-        prefix: appConfig.dotEnv.OYSTER_PREFIX
-    });
+    if (isTest) {
+        const { MockCortex, MockCache, MockOyster, MockAeon } = require('./__tests__/mocks/services');
+        cache = new MockCache();
+        cortex = new MockCortex();
+        oyster = new MockOyster();
+        aeon = new MockAeon();
+    } else {
 
-    const cortex = new Cortex({
-        prefix: appConfig.dotEnv.CORTEX_PREFIX,
-        url: appConfig.dotEnv.CORTEX_REDIS,
-        type: appConfig.dotEnv.CORTEX_TYPE,
-        state: () => {
-            return {}
-        },
-        activeDelay: "50",
-        idlDelay: "200",
-    });
-    const aeon = new Aeon({ cortex, timestampFrom: Date.now(), segmantDuration: 500 });
+        cache = require('./cache/cache.dbh')({
+            prefix: appConfig.dotEnv.CACHE_PREFIX,
+            url: appConfig.dotEnv.CACHE_REDIS
+        });
+
+        const Oyster = require('oyster-db');
+        oyster = new Oyster({
+            url: appConfig.dotEnv.OYSTER_REDIS,
+            prefix: appConfig.dotEnv.OYSTER_PREFIX
+        });
+
+        cortex = new Cortex({
+            prefix: appConfig.dotEnv.CORTEX_PREFIX,
+            url: appConfig.dotEnv.CORTEX_REDIS,
+            type: appConfig.dotEnv.CORTEX_TYPE,
+            state: () => {
+                return {}
+            },
+            activeDelay: "50",
+            idlDelay: "200",
+        });
+        aeon = new Aeon({ cortex, timestampFrom: Date.now(), segmantDuration: 500 });
+
+    }
 
     const managersLoader = new ManagersLoader({ config: appConfig, cache, cortex, oyster, aeon });
     const managers = managersLoader.load();
 
-    managers.userServer.run();
+    const server = managers.userServer.run();
 
     return {
         managers,
         cache,
         cortex,
         oyster,
-        aeon
+        aeon,
+        server
     };
 };
 

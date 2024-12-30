@@ -20,29 +20,30 @@ module.exports = class ClassroomManager {
     }
 
     // Create a new classroom
-    async createClassroom({ __longToken, name, capacity, resources = [], schoolId }) {
+    async createClassroom({ ...requestData }) {
         try {
-            // Verify authorization (only school admin of the specific school or superadmin)
-            if (!__longToken) {
-                return { error: 'Authentication required' };
+            const validator = this.validators.classroom.createClassroom;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
-                return { error: 'Unauthorized - Can only create classrooms for your school' };
-            }
-
-            // Validate capacity
-            if (capacity <= 0) {
-                return { error: 'Capacity must be greater than 0' };
-            }
+            const classroomData = {
+                ...(requestData.name && { name: requestData.name }),
+                ...(requestData.capacity && { capacity: requestData.capacity }),
+                ...(requestData.resources && { resources: requestData.resources }),
+                ...(requestData.schoolId && { schoolId: requestData.schoolId })
+            };
 
             // Create new classroom
-            const classroom = new this.classroom({
-                name,
-                capacity,
-                resources,
-                schoolId
-            });
+            const classroom = new this.classroom(classroomData);
 
             const savedClassroom = await classroom.save();
 
@@ -125,7 +126,7 @@ module.exports = class ClassroomManager {
     }
 
     // Update a classroom
-    async updateClassroom({ __longToken, classroomId, name, capacity, resources }) {
+    async updateClassroom({ __longToken, classroomId, ...requestData }) {
         try {
             if (!__longToken) {
                 return { error: 'Authentication required' };
@@ -141,15 +142,23 @@ module.exports = class ClassroomManager {
                 return { error: 'Unauthorized - Can only update classrooms from your school' };
             }
 
-            // Validate capacity if provided
-            if (capacity !== undefined && capacity <= 0) {
-                return { error: 'Capacity must be greater than 0' };
+            const validator = this.validators.classroom.updateClassroom;
+            const validationResult = await validator(requestData);
+            
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
             const updateData = {
-                ...(name && { name }),
-                ...(capacity && { capacity }),
-                ...(resources && { resources })
+                ...(requestData.name && { name: requestData.name }),
+                ...(requestData.capacity && { capacity: requestData.capacity }),
+                ...(requestData.resources && { resources: requestData.resources })
             };
 
             const updatedClassroom = await this.classroom.findByIdAndUpdate(

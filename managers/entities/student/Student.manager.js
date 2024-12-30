@@ -20,37 +20,32 @@ module.exports = class StudentManager {
     }
 
     // Create a new student
-    async createStudent({ __longToken, firstName, lastName, email, schoolId, classroomId, grade, dateOfBirth }) {
+    async createStudent({ ...requestData }) {
         try {
-            // Verify authorization
-            if (!__longToken) {
-                return { error: 'Authentication required' };
+            const validator = this.validators.student.createStudent;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
-            // Check if school admin has access to this school
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
-                return { error: 'Unauthorized - Can only create students for your school' };
-            }
+            const studentData = {
+                ...(requestData.firstName && { firstName: requestData.firstName }),
+                ...(requestData.lastName && { lastName: requestData.lastName }),
+                ...(requestData.email && { email: requestData.email }),
+                ...(requestData.schoolId && { schoolId: requestData.schoolId }),
+                ...(requestData.classroomId && { classroomId: requestData.classroomId }),
+                ...(requestData.grade && { grade: requestData.grade }),
+                ...(requestData.dateOfBirth && { dateOfBirth: new Date(requestData.dateOfBirth) })
+            };
 
-            // If classroomId is provided, verify it belongs to the school
-            if (classroomId) {
-                const classroom = await this.classroom.findById(classroomId);
-                if (!classroom || classroom.schoolId.toString() !== schoolId) {
-                    return { error: 'Invalid classroom ID or classroom does not belong to the school' };
-                }
-            }
-
-            // Create new student
-            const student = new this.student({
-                firstName,
-                lastName,
-                email,
-                schoolId,
-                classroomId,
-                grade,
-                dateOfBirth: new Date(dateOfBirth)
-            });
-
+            const student = new this.student(studentData);
             const savedStudent = await student.save();
 
             return {
@@ -101,7 +96,7 @@ module.exports = class StudentManager {
             }
 
             const schoolId = __query.schoolId;
-            
+
             // Verify authorization
             if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
                 return { error: 'Unauthorized - Can only view students from your school' };
@@ -140,7 +135,7 @@ module.exports = class StudentManager {
         }
     }
 
-    async updateStudent({ __longToken, studentId, firstName, lastName, email, classroomId }) {
+    async updateStudent({ __longToken, studentId, ...requestData }) {
         try {
             if (!__longToken) {
                 return { error: 'Authentication required' };
@@ -156,20 +151,26 @@ module.exports = class StudentManager {
                 return { error: 'Unauthorized - Can only update students from your school' };
             }
 
-            // If updating classroom, verify it belongs to the same school
-            if (classroomId) {
-                const classroom = await this.classroom.findById(classroomId);
-                if (!classroom || classroom.schoolId.toString() !== student.schoolId.toString()) {
-                    return { error: 'Invalid classroom ID or classroom does not belong to the school' };
-                }
+            const validator = this.validators.student.updateStudent;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
-            // Create update object with only the fields we want to update
-            const updateData = {};
-            if (firstName) updateData.firstName = firstName;
-            if (lastName) updateData.lastName = lastName;
-            if (email) updateData.email = email;
-            if (classroomId) updateData.classroomId = classroomId;
+            // Extract validated data
+            const updateData = {
+                ...(requestData.firstName && { firstName: requestData.firstName }),
+                ...(requestData.lastName && { lastName: requestData.lastName }),
+                ...(requestData.email && { email: requestData.email }),
+                ...(requestData.classroomId && { classroomId: requestData.classroomId })
+            };
 
             const updatedStudent = await this.student.findByIdAndUpdate(
                 studentId,

@@ -1,8 +1,8 @@
 module.exports = ({ managers }) => {
     return async ({ req, res, next, results }) => {
-        const { __authenticate } = results;
+        const { __authenticate: user } = results;
 
-        if (!__authenticate) {
+        if (!user) {
             return managers.responseDispatcher.dispatch(res, {
                 ok: false,
                 code: 401,
@@ -10,77 +10,55 @@ module.exports = ({ managers }) => {
             });
         }
 
-        const moduleName = req.params.moduleName;
-        const fnName = req.params.fnName;
-        const method = req.method.toLowerCase();
-
-        const methodToAction = {
-            'get': 'read',      
-            'post': 'create',   
-            'put': 'create',    
-            'patch': 'create',  
-            'delete': 'create'  
-        };
-
-        let layer;
-        let nodeId;
-
-        // Handle different resources
-        switch (moduleName) {
-            case 'school':
-                layer = 'school';
-                nodeId = req.body.schoolId || req.query.schoolId;
-                break;
-            case 'classroom':
-                layer = 'school.classroom';
-                const schoolId = req.body.schoolId || req.query.schoolId;
-                const classroomId = req.body.classroomId || req.query.classroomId;
-                nodeId = classroomId ? `${schoolId}.${classroomId}` : schoolId;
-                break;
-            case 'student':
-                layer = 'school.classroom.student';
-                const studentSchoolId = req.body.schoolId || req.query.schoolId;
-                const studentId = req.body.studentId || req.query.studentId;
-                nodeId = studentId ? `${studentSchoolId}.${studentId}` : studentSchoolId;
-                break;
-            default:
-                return managers.responseDispatcher.dispatch(res, {
-                    ok: false,
-                    code: 400,
-                    message: 'Invalid resource type'
-                });
-        }
-
-        if (__authenticate.role === 'superadmin') {
+        if (user.role === 'superadmin') {
             return next({ authorized: true });
         }
 
-        try {
-            const hasAccess = await managers.shark.isGranted({
-                layer,
-                userId: __authenticate.userId,
-                nodeId,
-                action: methodToAction[method],
-                isOwner: __authenticate.role === 'schoolAdmin' && 
-                    __authenticate.schoolId === (req.body.schoolId || req.query.schoolId)
-            });
+        const moduleName = req.params.moduleName;
+        const method = req.method.toLowerCase();
+        const requestedSchoolId = req.body.schoolId || req.query.schoolId;
 
-            if (!hasAccess) {
+        if (user.role === 'schoolAdmin') {
+            if (!requestedSchoolId || user.schoolId.toString() !== requestedSchoolId) {
                 return managers.responseDispatcher.dispatch(res, {
                     ok: false,
                     code: 403,
-                    message: 'Unauthorized - Insufficient permissions for this operation'
+                    message: 'Unauthorized - Can only access resources from your own school'
                 });
             }
 
-            next({ authorized: true });
-        } catch (error) {
-            console.error('Authorization error:', error);
+            switch (moduleName) {
+                case 'school':
+                    if (['get', 'put'].includes(method)) {
+                        return next({ authorized: true });
+                    }
+                    break;
+
+                case 'classroom':
+                    return next({ authorized: true });
+
+                case 'student':
+                    return next({ authorized: true });
+
+                default:
+                    return managers.responseDispatcher.dispatch(res, {
+                        ok: false,
+                        code: 400,
+                        message: 'Invalid resource type'
+                    });
+            }
+
             return managers.responseDispatcher.dispatch(res, {
                 ok: false,
-                code: 500,
-                message: 'Authorization check failed'
+                code: 403,
+                message: 'Unauthorized - Insufficient permissions for this operation'
             });
         }
+
+        return managers.responseDispatcher.dispatch(res, {
+            ok: false,
+            code: 403,
+            message: 'Unauthorized - Invalid role'
+        });
     };
 };
