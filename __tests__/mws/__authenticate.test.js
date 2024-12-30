@@ -79,4 +79,20 @@ describe('Authentication Middleware', () => {
 
     expect(response.status).not.toBe(401);
   });
+
+  it('should reject tokens for non-existent users', async () => {
+    const nonExistentUserId = new mongoose.Types.ObjectId();
+    const token = appInstance.managers.token.genLongToken({
+      userId: nonExistentUserId,
+      userKey: 'test'
+    });
+
+    const response = await request(baseUrl)
+      .get('/api/school/getAllSchools')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe('User not found');
+  });
+
 });
