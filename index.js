@@ -26,7 +26,7 @@ const createApp = async (options = {}) => {
 
     if (isTest) {
         const { MockCortex, MockCache, MockOyster, MockAeon } = require('./__tests__/mocks/services');
-        cache = new MockCache();
+        cache = options.cache || new MockCache();
         cortex = new MockCortex();
         oyster = new MockOyster();
         aeon = new MockAeon();
@@ -57,7 +57,7 @@ const createApp = async (options = {}) => {
 
     }
 
-    const managersLoader = new ManagersLoader({ config: appConfig, cache, cortex, oyster, aeon });
+    const managersLoader = new ManagersLoader({ config: appConfig, cache, cortex, oyster, aeon, virtualStack: options.virtualStack });
     const managers = managersLoader.load();
 
     const server = managers.userServer.run();

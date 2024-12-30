@@ -4,10 +4,6 @@ module.exports = ({ cache, managers }) => {
 
     return async ({ req, res, next, results }) => {
 
-        if (process.env.NODE_ENV === 'test') {
-            return next();
-        }
-
         const { ip } = results.__device
         const endpoint = `${req.method}:${req.path}`;
         const rateLimitKey = `ratelimit:${ip}:${endpoint}`;

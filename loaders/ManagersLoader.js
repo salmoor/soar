@@ -23,12 +23,13 @@ const StudentManager        = require('../managers/entities/student/Student.mana
  * @return modules tree with instance of each module
 */
 module.exports = class ManagersLoader {
-    constructor({ config, cortex, cache, oyster, aeon }) {
+    constructor({ config, cortex, cache, oyster, aeon, virtualStack }) {
 
         this.managers   = {};
         this.config     = config;
         this.cache      = cache;
         this.cortex     = cortex;
+        this.virtualStack = virtualStack;
         
         this._preload();
         this.injectable = {
@@ -61,6 +62,9 @@ module.exports = class ManagersLoader {
     }
 
     load() {
+        const defaultPreStack = ['__device', '__headers', '__rateLimit', '__authenticate', '__authorize'];
+        const preStack = this.virtualStack?.preStack || defaultPreStack;
+
         this.managers.responseDispatcher  = new ResponseDispatcher();
         this.managers.liveDb              = new LiveDB(this.injectable);
         const middlewaresLoader           = new MiddlewaresLoader(this.injectable);
@@ -76,7 +80,7 @@ module.exports = class ManagersLoader {
         this.managers.classroom           = new ClassroomManager(this.injectable);
         this.managers.student             = new StudentManager(this.injectable);
         /*************************************************************************************************/
-        this.managers.mwsExec             = new VirtualStack({ ...{ preStack: [/* '__token', */'__device', '__headers', '__rateLimit', '__authenticate', '__authorize'] }, ...this.injectable });
+        this.managers.mwsExec             = new VirtualStack({ ...{ preStack }, ...this.injectable });
         this.managers.userApi             = new ApiHandler({...this.injectable,...{prop:'httpExposed'}});
         this.managers.userServer          = new UserServer({ config: this.config, managers: this.managers });
 
