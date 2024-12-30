@@ -1,6 +1,7 @@
 module.exports = ({ managers, mongomodels }) => {
-    return async ({ req, res, next }) => {
-        const authHeader = req.headers.authorization;
+    return async ({ req, res, next, results }) => {
+        const { __headers } = results;
+        const authHeader = __headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return managers.responseDispatcher.dispatch(res, {
