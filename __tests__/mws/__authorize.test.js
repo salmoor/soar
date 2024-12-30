@@ -137,6 +137,20 @@ describe('Authorization Middleware', () => {
       expect(response.status).toBe(403);
       expect(response.body.message).toContain('Unauthorized');
     });
+
+    it('should reject school admin attempts to delete schools', async () => {
+      const token = appInstance.managers.token.genLongToken({
+        userId: schoolAdminUser._id,
+        userKey: schoolAdminUser.username
+      });
+
+      const response = await request(baseUrl)
+        .delete(`/api/school/deleteSchool?schoolId=${school._id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body.message).toContain('Unauthorized - Insufficient permissions');
+    });
   });
 
   describe('Resource-specific Authorization', () => {

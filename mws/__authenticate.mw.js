@@ -11,34 +11,25 @@ module.exports = ({ managers, mongomodels }) => {
         }
 
         const token = authHeader.split(' ')[1];
-
-        try {
-            const decoded = managers.token.verifyLongToken({ token });
-            if (!decoded) {
-                return managers.responseDispatcher.dispatch(res, {
-                    ok: false,
-                    code: 401,
-                    message: 'Invalid token'
-                });
-            }
-
-            const user = await mongomodels.user.findById(decoded.userId);
-            if (!user) {
-                return managers.responseDispatcher.dispatch(res, {
-                    ok: false,
-                    code: 401,
-                    message: 'User not found'
-                });
-            }
-
-            next(user);
-        } catch (error) {
-            console.error('Token verification error:', error);
+        const decoded = managers.token.verifyLongToken({ token });
+        
+        if (!decoded) {
             return managers.responseDispatcher.dispatch(res, {
                 ok: false,
                 code: 401,
-                message: 'Token verification failed'
+                message: 'Invalid token'
             });
         }
+
+        const user = await mongomodels.user.findById(decoded.userId);
+        if (!user) {
+            return managers.responseDispatcher.dispatch(res, {
+                ok: false,
+                code: 401,
+                message: 'User not found'
+            });
+        }
+
+        next(user);
     };
 };
