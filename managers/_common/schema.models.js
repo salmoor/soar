@@ -20,6 +20,7 @@ module.exports = {
     email: {
         path: 'email',
         type: 'string',
+        regex: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
         length: {min:3, max: 100},
     },
     title: {
@@ -81,10 +82,6 @@ module.exports = {
         type: 'String',
         length: 13,
     },
-    email: {
-        type: 'String',
-        regex: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-    },
     number: {
         type: 'Number',
         length: {min: 1, max:6},
@@ -111,5 +108,11 @@ module.exports = {
         path: "classroomId",
         type: "string",
         length: { min: 1, max: 50 },
-    }
+    },
+    role: {
+        path: 'role',
+        type: 'string',
+        oneOf: ['superadmin', 'schoolAdmin']
+    },
+
 }

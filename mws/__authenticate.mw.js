@@ -1,5 +1,20 @@
 module.exports = ({ managers, mongomodels }) => {
+    const PUBLIC_ROUTES = [
+        { module: 'auth', methods: ['register', 'login'] }
+    ];
+
     return async ({ req, res, next, results }) => {
+        const moduleName = req.params.moduleName;
+        const fnName = req.params.fnName;
+
+        const isPublicRoute = PUBLIC_ROUTES.some(route => 
+            route.module === moduleName && route.methods.includes(fnName)
+        );
+
+        if (isPublicRoute) {
+            return next({ isPublicRoute: true });
+        }
+
         const { __headers } = results;
         const authHeader = __headers.authorization;
 

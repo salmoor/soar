@@ -1,6 +1,10 @@
 module.exports = ({ managers }) => {
     return async ({ req, res, next, results }) => {
-        const { __authenticate: user } = results;
+        if (results.__authenticate && results.__authenticate.isPublicRoute) {
+            return next({ authorized: true });
+        }
+
+        const user = results.__authenticate;
 
         if (user.role === 'superadmin') {
             return next({ authorized: true });

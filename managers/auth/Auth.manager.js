@@ -1,105 +1,111 @@
 const bcrypt = require('bcrypt');
 
 module.exports = class AuthManager {
-    constructor({ config, managers, mongomodels }) {
+    constructor({ config, managers, validators, mongomodels }) {
         this.config = config;
         this.tokenManager = managers.token;
+        this.validators = validators;
         this.user = mongomodels.user;
-        
-        // Expose HTTP endpoints
+
         this.httpExposed = [
-            'register',
-            'login'
+            'post=register',
+            'post=login'
         ];
     }
 
-    async register({ username, password, email, role, schoolId }) {
+    async register({ ...requestData }) {
         try {
-            // Validate role
-            if (!['superadmin', 'schoolAdmin'].includes(role)) {
-                return { error: 'Invalid role' };
+            const validator = this.validators.auth.register;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
             }
 
-            // If schoolAdmin, schoolId is required
-            if (role === 'schoolAdmin' && !schoolId) {
-                return { error: 'School ID is required for school administrators' };
+            if (requestData.role === 'schoolAdmin' && !requestData.schoolId) {
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors: ['schoolId: School ID is required for school administrators']
+                };
             }
 
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(requestData.password, 10);
 
-            // Create user
-            const user = new this.user({
-                username,
+            const userData = {
+                username: requestData.username,
                 password: hashedPassword,
-                email,
-                role,
-                ...(role === 'schoolAdmin' && { schoolId })
-            });
+                email: requestData.email,
+                role: requestData.role,
+                ...(requestData.schoolId && { schoolId: requestData.schoolId })
+            };
 
+            const user = new this.user(userData);
             await user.save();
 
-            if (role === 'schoolAdmin') {
-                this.shark.addDirectAccess({
-                    userId: user._id,
-                    nodeId: schoolId,
-                    action: 'create'
-                });
-            }
-
-            // Generate tokens
-            const longToken = this.tokenManager.genLongToken({
-                userId: user._id,
-                userKey: user.username,
-            });
-
-            return {
-                message: 'User registered successfully',
-                user: {
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                },
-                longToken
-            };
-        } catch (error) {
-            console.error('Registration error:', error);
-            if (error.code === 11000) { // Duplicate key error
-                return { error: 'Username or email already exists' };
-            }
-            return { error: 'Registration failed' };
-        }
-    }
-
-    async login({ username, password }) {
-        try {
-            // Find user
-            const user = await this.user.findOne({ username });
-            if (!user) {
-                return { error: 'Invalid credentials' };
-            }
-
-            // Verify password
-            const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) {
-                return { error: 'Invalid credentials' };
-            }
-
-            // Generate tokens
             const longToken = this.tokenManager.genLongToken({
                 userId: user._id,
                 userKey: user.username
             });
 
             return {
-                message: 'Login successful',
-                user: {
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                },
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                longToken
+            };
+        } catch (error) {
+            console.error('Registration error:', error);
+            if (error.code === 11000) {
+                return { error: 'Username or email already exists' };
+            }
+            return { error: 'Registration failed' };
+        }
+    }
+
+    async login({ ...requestData }) {
+        try {
+            const validator = this.validators.auth.login;
+            const validationResult = await validator(requestData);
+
+            if (validationResult && validationResult.length > 0) {
+                const errors = validationResult.map(err => `${err.label}: ${err.message}`);
+                return {
+                    ok: false,
+                    message: 'Validation failed',
+                    code: 422,
+                    errors
+                };
+            }
+
+            const user = await this.user.findOne({ username: requestData.username });
+            if (!user) {
+                return { error: 'Invalid credentials' };
+            }
+
+            const validPassword = await bcrypt.compare(requestData.password, user.password);
+            if (!validPassword) {
+                return { error: 'Invalid credentials' };
+            }
+
+            const longToken = this.tokenManager.genLongToken({
+                userId: user._id,
+                userKey: user.username
+            });
+
+            return {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
                 longToken
             };
         } catch (error) {
@@ -107,4 +113,4 @@ module.exports = class AuthManager {
             return { error: 'Login failed' };
         }
     }
-}
+};
