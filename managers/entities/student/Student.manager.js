@@ -7,7 +7,6 @@ module.exports = class StudentManager {
         this.student = mongomodels.student;
         this.classroom = mongomodels.classroom;
 
-        // Expose HTTP endpoints
         this.httpExposed = [
             'post=createStudent',
             'get=getStudent',
@@ -19,7 +18,6 @@ module.exports = class StudentManager {
         ];
     }
 
-    // Create a new student
     async createStudent({ ...requestData }) {
         try {
             const validator = this.validators.student.createStudent;
@@ -68,7 +66,6 @@ module.exports = class StudentManager {
         }
     }
 
-    // Get a specific student
     async getStudent({ __query }) {
         try {
             const student = await this.student.findById(__query.studentId)
@@ -96,7 +93,6 @@ module.exports = class StudentManager {
         }
     }
 
-    // Get all students for a school
     async getAllStudents({ __query }) {
         try {
             const schoolId = __query.schoolId;
@@ -154,7 +150,6 @@ module.exports = class StudentManager {
                 };
             }
 
-            // Extract validated data
             const updateData = {
                 ...(requestData.firstName && { firstName: requestData.firstName }),
                 ...(requestData.lastName && { lastName: requestData.lastName }),
@@ -185,7 +180,6 @@ module.exports = class StudentManager {
         }
     }
 
-    // Delete a student
     async deleteStudent({ __query }) {
         try {
             const student = await this.student.findById(__query.studentId);
@@ -212,7 +206,6 @@ module.exports = class StudentManager {
         }
     }
 
-    // Transfer student to another school
     async transferStudent({ studentId, toSchoolId, reason }) {
         try {
             const student = await this.student.findById(studentId);
@@ -220,14 +213,12 @@ module.exports = class StudentManager {
                 return { error: 'Student not found' };
             }
             
-            // Add transfer record
             student.transferHistory.push({
                 fromSchool: student.schoolId,
                 toSchool: toSchoolId,
                 reason
             });
 
-            // Update student record
             student.schoolId = toSchoolId;
             student.classroomId = null;
 
@@ -250,7 +241,6 @@ module.exports = class StudentManager {
         }
     }
 
-    // Enroll student in a classroom
     async enrollStudent({ studentId, classroomId }) {
         try {
             const student = await this.student.findById(studentId);
@@ -258,7 +248,6 @@ module.exports = class StudentManager {
                 return { error: 'Student not found' };
             }
 
-            // Verify classroom exists and belongs to the same school
             const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
@@ -267,7 +256,6 @@ module.exports = class StudentManager {
                 return { error: 'Classroom does not belong to student\'s school' };
             }
 
-            // Check classroom capacity
             const currentStudentsCount = await this.student.countDocuments({
                 classroomId,
             });
@@ -276,7 +264,6 @@ module.exports = class StudentManager {
                 return { error: 'Classroom is at full capacity' };
             }
 
-            // Update student's classroom
             student.classroomId = classroomId;
             const updatedStudent = await student.save();
 
