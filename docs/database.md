@@ -1,5 +1,58 @@
 # Database Schema Documentation
 
+```mermaid
+erDiagram
+    User {
+        ObjectId _id PK
+        String username "unique"
+        String password
+        String email "unique"
+        String role "enum[superadmin,schoolAdmin]"
+        ObjectId schoolId FK "optional"
+        Date createdAt
+        Date updatedAt
+    }
+
+    School {
+        ObjectId _id PK
+        String name
+        String address
+        Object profileInfo
+        String profileInfo.email
+        String profileInfo.phone
+        Date createdAt
+        Date updatedAt
+    }
+
+    Classroom {
+        ObjectId _id PK
+        ObjectId schoolId FK
+        String name
+        Number capacity
+        String[] resources
+        Date createdAt
+        Date updatedAt
+    }
+
+    Student {
+        ObjectId _id PK
+        ObjectId schoolId FK
+        ObjectId classroomId FK "optional"
+        String firstName
+        String lastName
+        String email "unique"
+        Date dateOfBirth
+        Date enrollmentDate
+        Object[] transferHistory
+        Date createdAt
+        Date updatedAt
+    }
+
+    School ||--o{ User : "has"
+    School ||--o{ Classroom : "contains"
+    School ||--o{ Student : "enrolls"
+    Classroom ||--o{ Student : "has"
+```
 ## Collections
 
 ### User Collection
