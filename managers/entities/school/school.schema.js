@@ -23,13 +23,13 @@ module.exports = {
     ],
     updateSchool: [
         {
-            model: 'text',
-            required: false,
+            model: 'longText',
+            required: true,
             path: 'name'
         },
         {
             model: 'longText',
-            required: false,
+            required: true,
             path: 'address'
         },
         {

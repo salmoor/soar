@@ -7,7 +7,6 @@ module.exports = class SchoolManager {
         this.school = mongomodels.school;
         this.classroom = mongomodels.classroom;
 
-        // Expose HTTP endpoints
         this.httpExposed = [
             'post=createSchool',
             'get=getSchool',
@@ -38,7 +37,6 @@ module.exports = class SchoolManager {
                 ...(requestData.profileInfo && { profileInfo: requestData.profileInfo })
             };
 
-            // Create and save school instance
             const school = new this.school(schoolData);
             const savedSchool = await school.save();
 
@@ -57,7 +55,6 @@ module.exports = class SchoolManager {
         }
     }
 
-    // Get a specific school by ID
     async getSchool({ __query }) {
         try {
             const school = await this.school.findById(__query.schoolId);
@@ -77,7 +74,6 @@ module.exports = class SchoolManager {
         }
     }
 
-    // Get all schools (superadmin only)
     async getAllSchools({ __query }) {
         try {
             const page = __query.page ?? 1;
@@ -107,10 +103,9 @@ module.exports = class SchoolManager {
         }
     }
 
-    // Update a school
     async updateSchool({schoolId, ...requestData }) {
         try {
-            const validator = this.validators.school.createSchool;
+            const validator = this.validators.school.updateSchool;
             const validationResult = await validator(requestData);
 
             const schoolData = {
