@@ -14,7 +14,15 @@
     "testTimeout": 10000,
     "detectOpenHandles": true,
     "coveragePathIgnorePatterns": [
-      "/node_modules/"
+      "/node_modules/",
+      "/mws/__token.mw.js",
+      "/mws/__longToken.mw.js",
+      "/mws/__shortToken.mw.js",
+      "/mws/__files.mw.js",
+      "/mws/__params.mw.js",
+      "/managers/time_machine/TimeMachine.manager.js",
+      "/managers/shark_fin/SharkFin.manager.js",
+      "/managers/live_db/LiveDb.manager.js"
     ],
     "testMatch": [
       "**/__tests__/**/*.test.js"

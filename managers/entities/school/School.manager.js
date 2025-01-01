@@ -5,6 +5,7 @@ module.exports = class SchoolManager {
         this.validators = validators;
         this.responseDispatcher = managers.responseDispatcher;
         this.school = mongomodels.school;
+        this.classroom = mongomodels.classroom;
 
         // Expose HTTP endpoints
         this.httpExposed = [
@@ -42,8 +43,10 @@ module.exports = class SchoolManager {
             const savedSchool = await school.save();
 
             return {
-                message: 'School created successfully',
-                data: savedSchool
+                _id: savedSchool._id,
+                name: savedSchool.name,
+                address: savedSchool.address,
+                contactInfo: savedSchool.contactInfo,
             };
         } catch (error) {
             console.error('Create school error:', error);
@@ -62,7 +65,12 @@ module.exports = class SchoolManager {
                 return { error: 'School not found' };
             }
 
-            return { data: school };
+            return {
+                _id: school._id,
+                name: school.name,
+                address: school.address,
+                contactInfo: school.contactInfo,
+            };
         } catch (error) {
             console.error('Get school error:', error);
             return { error: 'Failed to fetch school' };
@@ -85,7 +93,7 @@ module.exports = class SchoolManager {
             const total = await this.school.countDocuments();
 
             return {
-                data: schools,
+                schools,
                 pagination: {
                     current: page,
                     limit,
@@ -122,8 +130,10 @@ module.exports = class SchoolManager {
             }
 
             return {
-                message: 'School updated successfully',
-                data: school
+                _id: school._id,
+                name: school.name,
+                address: school.address,
+                contactInfo: school.contactInfo
             };
         } catch (error) {
             console.error('Update school error:', error);
@@ -131,17 +141,16 @@ module.exports = class SchoolManager {
         }
     }
 
-    // Delete a school (superadmin only)
     async deleteSchool({ __query }) {
         try {
             const school = await this.school.findByIdAndDelete(__query.schoolId);
 
             if (!school) {
-                return { error: 'School not found' };
+                return { errors: ['School not found'], code: 404 };
             }
 
             const classrooms = await this.classroom.countDocuments({ schoolId: __query.schoolId });
-            if (relatedClassrooms > 0) {
+            if (classrooms > 0) {
                 return { 
                     error: 'Cannot delete school',
                     message: `School has ${classrooms} classroom(s). Please delete or reassign all classrooms before deleting the school.`
@@ -149,8 +158,10 @@ module.exports = class SchoolManager {
             }
 
             return {
-                message: 'School deleted successfully',
-                data: school
+                _id: school._id,
+                name: school.name,
+                address: school.address,
+                contactInfo: school.contactInfo
             };
         } catch (error) {
             console.error('Delete school error:', error);
