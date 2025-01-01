@@ -8,10 +8,24 @@ module.exports = ({uri})=>{
     useUnifiedTopology: true,
   });
 
+  const ensureIndexes = async () => {
+    try {
+      await Promise.all([
+        require('../managers/entities/user/user.mongoModel').createIndexes(),
+        require('../managers/entities/school/school.mongoModel').createIndexes(),
+        require('../managers/entities/classroom/classroom.mongoModel').createIndexes(),
+        require('../managers/entities/student/student.mongoModel').createIndexes()
+      ]);
+      console.log('💾 Database indexes have been created');
+    } catch (error) {
+      console.error('Error creating indexes:', error);
+    }
+  };
 
   // When successfully connected
   mongoose.connection.on('connected', function () {
     console.log('💾  Mongoose default connection open to ' + uri);
+    ensureIndexes();
   });
 
   // If the connection throws an error
