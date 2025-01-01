@@ -1,7 +1,7 @@
 module.exports = {
     createClassroom: [
         {
-            model: 'text',
+            model: 'longText',
             required: true,
             path: 'name'
         },
@@ -22,7 +22,7 @@ module.exports = {
     ],
     updateClassroom: [
         {
-            model: 'text',
+            model: 'longText',
             required: false,
             path: 'name'
         },

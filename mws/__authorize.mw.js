@@ -1,4 +1,4 @@
-module.exports = ({ managers }) => {
+module.exports = ({ managers, mongomodels }) => {
     return async ({ req, res, next, results }) => {
         if (results.__authenticate && results.__authenticate.isPublicRoute) {
             return next({ authorized: true });
@@ -12,7 +12,13 @@ module.exports = ({ managers }) => {
 
         const moduleName = req.params.moduleName;
         const method = req.method.toLowerCase();
-        const requestedSchoolId = req.body.schoolId || req.query.schoolId;
+        let requestedSchoolId = req.body.schoolId || req.query.schoolId;
+
+        if ((req.query.classroomId || req.body.classroomId) && !requestedSchoolId) {
+            const classroomId = req.query.classroomId || req.body.classroomId;
+            const classroom = await mongomodels.classroom.findById(classroomId);
+            requestedSchoolId = classroom.schoolId.toString();
+        }
 
         if (!requestedSchoolId || user.schoolId.toString() !== requestedSchoolId) {
             return managers.responseDispatcher.dispatch(res, {

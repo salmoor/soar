@@ -5,6 +5,7 @@ module.exports = class ClassroomManager {
         this.validators = validators;
         this.responseDispatcher = managers.responseDispatcher;
         this.classroom = mongomodels.classroom;
+        this.student = mongomodels.student;
         this.school = mongomodels.school;
 
         // Expose HTTP endpoints
@@ -48,8 +49,10 @@ module.exports = class ClassroomManager {
             const savedClassroom = await classroom.save();
 
             return {
-                message: 'Classroom created successfully',
-                data: savedClassroom
+                _id: savedClassroom._id,
+                name: savedClassroom.name,
+                capacity: savedClassroom.capacity,
+                resources: savedClassroom.resources
             };
         } catch (error) {
             console.error('Create classroom error:', error);
@@ -58,23 +61,19 @@ module.exports = class ClassroomManager {
     }
 
     // Get a specific classroom
-    async getClassroom({ __longToken, __query }) {
+    async getClassroom({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const classroom = await this.classroom.findById(__query.classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
 
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== classroom.schoolId.toString()) {
-                return { error: 'Unauthorized - Access denied to this classroom' };
-            }
-
-            return { data: classroom };
+            return {
+                _id: classroom._id,
+                name: classroom.name,
+                capacity: classroom.capacity,
+                resources: classroom.resources
+            };
         } catch (error) {
             console.error('Get classroom error:', error);
             return { error: 'Failed to fetch classroom' };
@@ -82,21 +81,12 @@ module.exports = class ClassroomManager {
     }
 
     // Get all classrooms for a school
-    async getAllClassrooms({ __longToken, __query }) {
+    async getAllClassrooms({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const schoolId = __query.schoolId;
 
             if (!schoolId) {
                 return { error: 'School ID is required' };
-            }
-            
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
-                return { error: 'Unauthorized - Can only view classrooms from your school' };
             }
 
             const page = parseInt(__query.page) || 1;
@@ -111,7 +101,7 @@ module.exports = class ClassroomManager {
             const total = await this.classroom.countDocuments({ schoolId });
 
             return {
-                data: classrooms,
+                classrooms,
                 pagination: {
                     current: page,
                     limit,
@@ -126,20 +116,11 @@ module.exports = class ClassroomManager {
     }
 
     // Update a classroom
-    async updateClassroom({ __longToken, classroomId, ...requestData }) {
+    async updateClassroom({ classroomId, ...requestData }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
-            }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== classroom.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only update classrooms from your school' };
             }
 
             const validator = this.validators.classroom.updateClassroom;
@@ -168,8 +149,10 @@ module.exports = class ClassroomManager {
             );
 
             return {
-                message: 'Classroom updated successfully',
-                data: updatedClassroom
+                _id: updatedClassroom._id,
+                name: updatedClassroom.name,
+                capacity: updatedClassroom.capacity,
+                resources: updatedClassroom.resources
             };
         } catch (error) {
             console.error('Update classroom error:', error);
@@ -178,23 +161,19 @@ module.exports = class ClassroomManager {
     }
 
     // Delete a classroom
-    async deleteClassroom({ __longToken, __query }) {
+    async deleteClassroom({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const classroom = await this.classroom.findById(__query.classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
             }
 
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== classroom.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only delete classrooms from your school' };
+            const classroomStudents = await this.student.find({ classroomId: classroom._id });
+
+            if (classroomStudents.length > 0) {
+                return { error: 'Cannot delete classroom with students' };
             }
 
-            //TODO: Check students, and conditionally disable
             await this.classroom.findByIdAndDelete(__query.classroomId);
 
             return {
@@ -208,20 +187,11 @@ module.exports = class ClassroomManager {
     }
 
     // Manage classroom capacity
-    async manageCapacity({ __longToken, classroomId, newCapacity }) {
+    async manageCapacity({ classroomId, newCapacity }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
-            }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== classroom.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only manage capacity for classrooms in your school' };
             }
 
             // Validate new capacity
@@ -229,15 +199,20 @@ module.exports = class ClassroomManager {
                 return { error: 'New capacity must be greater than 0' };
             }
 
-            // TODO: Check current number of students in the classroom
-            // If reducing capacity below current occupancy, return error
+            const students = await this.student.find({ classroomId: classroom._id });
+
+            if (newCapacity < students.length) {
+                return { error: 'New capacity cannot be less than the number of students in the classroom' };
+            }
 
             classroom.capacity = newCapacity;
             await classroom.save();
 
             return {
-                message: 'Classroom capacity updated successfully',
-                data: classroom
+                _id: classroom._id,
+                name: classroom.name,
+                capacity: classroom.capacity,
+                resources: classroom.resources
             };
         } catch (error) {
             console.error('Manage capacity error:', error);
@@ -246,20 +221,11 @@ module.exports = class ClassroomManager {
     }
 
     // Manage classroom resources
-    async manageResources({ __longToken, classroomId, action, resources }) {
+    async manageResources({ classroomId, action, resources }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const classroom = await this.classroom.findById(classroomId);
             if (!classroom) {
                 return { error: 'Classroom not found' };
-            }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== classroom.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only manage resources for classrooms in your school' };
             }
 
             switch (action) {
@@ -282,8 +248,10 @@ module.exports = class ClassroomManager {
             await classroom.save();
 
             return {
-                message: 'Classroom resources updated successfully',
-                data: classroom
+                _id: classroom._id,
+                name: classroom.name,
+                capacity: classroom.capacity,
+                resources: classroom.resources
             };
         } catch (error) {
             console.error('Manage resources error:', error);
