@@ -839,6 +839,221 @@ paths:
         '404':
           description: School not found
 
+  /student/getStudent:
+    get:
+      tags:
+        - Students
+      summary: Get student by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID of the student to retrieve
+      responses:
+        '200':
+          description: Student details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Student not found
+
+  /student/getAllStudents:
+    get:
+      tags:
+        - Students
+      summary: Get all students for a school (paginated)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: schoolId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID of the school to get students from
+        - name: classroomId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional - Filter students by classroom
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of students per page
+      responses:
+        '200':
+          description: Students retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      students:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Student'
+                      pagination:
+                        type: object
+                        properties:
+                          current:
+                            type: integer
+                          limit:
+                            type: integer
+                          total:
+                            type: integer
+                          pages:
+                            type: integer
+        '403':
+          description: Unauthorized access
+        '404':
+          description: School not found
+
+  /student/updateStudent:
+    put:
+      tags:
+        - Students
+      summary: Update student information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+              properties:
+                studentId:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                classroomId:
+                  type: string
+      responses:
+        '200':
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Student not found
+        '422':
+          description: Validation error
+
+  /student/deleteStudent:
+    delete:
+      tags:
+        - Students
+      summary: Delete a student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID of the student to delete
+      responses:
+        '200':
+          description: Student deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Student not found
+
+  /student/enrollStudent:
+    put:
+      tags:
+        - Students
+      summary: Enroll student in a classroom
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - classroomId
+              properties:
+                studentId:
+                  type: string
+                  description: ID of the student to enroll
+                classroomId:
+                  type: string
+                  description: ID of the classroom to enroll in
+      responses:
+        '200':
+          description: Student enrolled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Student or classroom not found
+        '422':
+          description: Classroom is at full capacity or belongs to different school
+
 security:
   - BearerAuth: []
 
