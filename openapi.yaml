@@ -1,0 +1,543 @@
+openapi: 3.0.3
+info:
+  title: School Management System API
+  description: API documentation for the School Management System
+  version: 1.0.0
+  contact:
+    name: Alemdar Salmoor
+    email: alemdarsalmoor@gmail.com
+servers:
+  - url: https://soar.alemsalmoor.com/api
+    description: Production server
+  - url: http://localhost:5111/api
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+        code:
+          type: integer
+          format: int32
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+        - email
+        - role
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [superadmin, schoolAdmin]
+        schoolId:
+          type: string
+          description: Required only when role is schoolAdmin
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+            role:
+              type: string
+            longToken:
+              type: string
+
+    School:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        profileInfo:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+            phone:
+              type: string
+
+    CreateSchoolRequest:
+      type: object
+      required:
+        - name
+        - address
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+        address:
+          type: string
+          minLength: 3
+          maxLength: 250
+        profileInfo:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+            phone:
+              type: string
+
+    Classroom:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        schoolId:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+
+    CreateClassroomRequest:
+      type: object
+      required:
+        - name
+        - capacity
+        - schoolId
+      properties:
+        name:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        schoolId:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+
+    Student:
+      type: object
+      properties:
+        _id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        schoolId:
+          type: string
+        classroomId:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        transferHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              fromSchool:
+                type: string
+              toSchool:
+                type: string
+              date:
+                type: string
+                format: date-time
+              reason:
+                type: string
+
+    CreateStudentRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - schoolId
+        - dateOfBirth
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        schoolId:
+          type: string
+        classroomId:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+
+    PaginatedResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+            pagination:
+              type: object
+              properties:
+                current:
+                  type: integer
+                limit:
+                  type: integer
+                total:
+                  type: integer
+                pages:
+                  type: integer
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or username/email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /school/createSchool:
+    post:
+      tags:
+        - Schools
+      summary: Create a new school
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSchoolRequest'
+      responses:
+        '200':
+          description: School created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/School'
+        '403':
+          description: Unauthorized - Superadmin access required
+        '422':
+          description: Validation error
+
+  /school/getSchool:
+    get:
+      tags:
+        - Schools
+      summary: Get school by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: schoolId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: School details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/School'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: School not found
+
+  /school/getAllSchools:
+    get:
+      tags:
+        - Schools
+      summary: Get all schools (paginated)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Schools retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '403':
+          description: Unauthorized - Superadmin access required
+
+  /classroom/createClassroom:
+    post:
+      tags:
+        - Classrooms
+      summary: Create a new classroom
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClassroomRequest'
+      responses:
+        '200':
+          description: Classroom created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '422':
+          description: Validation error
+
+  /classroom/getClassroom:
+    get:
+      tags:
+        - Classrooms
+      summary: Get classroom by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: classroomId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Classroom details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Classroom not found
+
+  /student/createStudent:
+    post:
+      tags:
+        - Students
+      summary: Create a new student
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentRequest'
+      responses:
+        '200':
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '422':
+          description: Validation error
+
+  /student/transferStudent:
+    put:
+      tags:
+        - Students
+      summary: Transfer student to another school
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - toSchoolId
+              properties:
+                studentId:
+                  type: string
+                toSchoolId:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Student transferred successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Student'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Student or school not found
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication operations
+  - name: Schools
+    description: School management operations
+  - name: Classrooms
+    description: Classroom management operations
+  - name: Students
+    description: Student management operations
