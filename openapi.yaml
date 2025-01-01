@@ -529,6 +529,90 @@ paths:
         '404':
           description: Student or school not found
 
+  /school/updateSchool:
+    put:
+      tags:
+        - Schools
+      summary: Update school information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - schoolId
+              properties:
+                schoolId:
+                  type: string
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                address:
+                  type: string
+                  minLength: 3
+                  maxLength: 250
+                profileInfo:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                    phone:
+                      type: string
+      responses:
+        '200':
+          description: School updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/School'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: School not found
+        '422':
+          description: Validation error
+
+  /school/deleteSchool:
+    delete:
+      tags:
+        - Schools
+      summary: Delete a school
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: schoolId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: School deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "School deleted successfully"
+        '403':
+          description: Unauthorized - Superadmin access required
+        '404':
+          description: School not found
+
 security:
   - BearerAuth: []
 
