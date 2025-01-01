@@ -459,6 +459,232 @@ paths:
         '404':
           description: Classroom not found
 
+  /classroom/getAllClassrooms:
+    get:
+      tags:
+        - Classrooms
+      summary: Get all classrooms for a school (paginated)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: schoolId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Classrooms retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      classrooms:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Classroom'
+                      pagination:
+                        type: object
+                        properties:
+                          current:
+                            type: integer
+                          limit:
+                            type: integer
+                          total:
+                            type: integer
+                          pages:
+                            type: integer
+        '403':
+          description: Unauthorized access
+        '404':
+          description: School not found
+
+  /classroom/updateClassroom:
+    put:
+      tags:
+        - Classrooms
+      summary: Update classroom information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classroomId
+              properties:
+                classroomId:
+                  type: string
+                name:
+                  type: string
+                capacity:
+                  type: integer
+                  minimum: 1
+                resources:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Classroom updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Classroom not found
+        '422':
+          description: Validation error
+
+  /classroom/deleteClassroom:
+    delete:
+      tags:
+        - Classrooms
+      summary: Delete a classroom
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: classroomId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Classroom deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Classroom deleted successfully"
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Classroom not found
+        '422':
+          description: Cannot delete classroom with students
+
+  /classroom/manageResources:
+    put:
+      tags:
+        - Classrooms
+      summary: Manage classroom resources
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classroomId
+                - action
+                - resources
+              properties:
+                classroomId:
+                  type: string
+                action:
+                  type: string
+                  enum: [add, remove, set]
+                  description: Action to perform on resources
+                resources:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Resources updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Classroom not found
+        '422':
+          description: Invalid action specified
+
+  /classroom/manageCapacity:
+    put:
+      tags:
+        - Classrooms
+      summary: Update classroom capacity
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classroomId
+                - newCapacity
+              properties:
+                classroomId:
+                  type: string
+                newCapacity:
+                  type: integer
+                  minimum: 1
+                  description: New capacity value (must be greater than current number of students)
+      responses:
+        '200':
+          description: Capacity updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Classroom'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: Classroom not found
+        '422':
+          description: New capacity is invalid or less than current student count
+
   /student/createStudent:
     post:
       tags:
