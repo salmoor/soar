@@ -32,9 +32,8 @@ components:
           type: array
           items:
             type: string
-        code:
-          type: integer
-          format: int32
+        data:
+          type: object
 
     RegisterRequest:
       type: object
