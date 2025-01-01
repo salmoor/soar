@@ -13,12 +13,12 @@ module.exports = {
         {
             model: 'email',
             required: false,
-            path: 'contactInfo.email'
+            path: 'profileInfo.email'
         },
         {
             model: 'phone',
             required: false,
-            path: 'contactInfo.phone'
+            path: 'profileInfo.phone'
         }
     ],
     updateSchool: [
@@ -35,12 +35,12 @@ module.exports = {
         {
             model: 'email',
             required: false,
-            path: 'contactInfo.email'
+            path: 'profileInfo.email'
         },
         {
             model: 'phone',
             required: false,
-            path: 'contactInfo.phone'
+            path: 'profileInfo.phone'
         }
     ]
 };

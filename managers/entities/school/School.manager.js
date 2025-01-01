@@ -35,7 +35,7 @@ module.exports = class SchoolManager {
             const schoolData = {
                 ...(requestData.name && { name: requestData.name }),
                 ...(requestData.address && { address: requestData.address }),
-                ...(requestData.contactInfo && { contactInfo: requestData.contactInfo })
+                ...(requestData.profileInfo && { profileInfo: requestData.profileInfo })
             };
 
             // Create and save school instance
@@ -46,7 +46,7 @@ module.exports = class SchoolManager {
                 _id: savedSchool._id,
                 name: savedSchool.name,
                 address: savedSchool.address,
-                contactInfo: savedSchool.contactInfo,
+                profileInfo: savedSchool.profileInfo,
             };
         } catch (error) {
             console.error('Create school error:', error);
@@ -69,7 +69,7 @@ module.exports = class SchoolManager {
                 _id: school._id,
                 name: school.name,
                 address: school.address,
-                contactInfo: school.contactInfo,
+                profileInfo: school.profileInfo,
             };
         } catch (error) {
             console.error('Get school error:', error);
@@ -116,7 +116,7 @@ module.exports = class SchoolManager {
             const schoolData = {
                 ...(requestData.name && { name: requestData.name }),
                 ...(requestData.address && { address: requestData.address }),
-                ...(requestData.contactInfo && { contactInfo: requestData.contactInfo })
+                ...(requestData.profileInfo && { profileInfo: requestData.profileInfo })
             };
 
             const school = await this.school.findByIdAndUpdate(
@@ -133,7 +133,7 @@ module.exports = class SchoolManager {
                 _id: school._id,
                 name: school.name,
                 address: school.address,
-                contactInfo: school.contactInfo
+                profileInfo: school.profileInfo
             };
         } catch (error) {
             console.error('Update school error:', error);
@@ -161,7 +161,7 @@ module.exports = class SchoolManager {
                 _id: school._id,
                 name: school.name,
                 address: school.address,
-                contactInfo: school.contactInfo
+                profileInfo: school.profileInfo
             };
         } catch (error) {
             console.error('Delete school error:', error);

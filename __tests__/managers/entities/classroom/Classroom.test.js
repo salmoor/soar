@@ -30,7 +30,7 @@ describe('Classroom Integration Tests', () => {
         testSchool = await SchoolModel.create({
             name: 'Test School',
             address: '123 Test St',
-            contactInfo: {
+            profileInfo: {
                 email: 'test@school.com',
                 phone: '1234567890'
             }
@@ -158,7 +158,7 @@ describe('Classroom Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '456 Other St',
-                contactInfo: { email: 'other@school.com', phone: '9876543210' }
+                profileInfo: { email: 'other@school.com', phone: '9876543210' }
             });
 
             const otherClassroom = await ClassroomModel.create({
@@ -272,7 +272,7 @@ describe('Classroom Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '456 Other St',
-                contactInfo: { email: 'other@school.com', phone: '9876543210' }
+                profileInfo: { email: 'other@school.com', phone: '9876543210' }
             });
 
             const otherClassroom = await ClassroomModel.create({

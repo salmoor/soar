@@ -27,7 +27,7 @@ describe('School Integration Tests', () => {
         testSchool = await SchoolModel.create({
             name: 'Test School',
             address: '123 Test St',
-            contactInfo: {
+            profileInfo: {
                 email: 'test@school.com',
                 phone: '1234567890123'
             }
@@ -69,7 +69,7 @@ describe('School Integration Tests', () => {
             const schoolData = {
                 name: 'New Test School',
                 address: '456 School St',
-                contactInfo: {
+                profileInfo: {
                     email: 'new@school.com',
                     phone: '9876543210987'
                 }
@@ -93,7 +93,7 @@ describe('School Integration Tests', () => {
             const schoolData = {
                 name: 'New Test School',
                 address: '456 School St',
-                contactInfo: {
+                profileInfo: {
                     email: 'new@school.com',
                     phone: '9876543210'
                 }
@@ -150,7 +150,7 @@ describe('School Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '789 Other St',
-                contactInfo: {
+                profileInfo: {
                     email: 'other@school.com',
                     phone: '5555555555'
                 }
@@ -171,12 +171,12 @@ describe('School Integration Tests', () => {
                 {
                     name: 'School 2',
                     address: '456 Test Ave',
-                    contactInfo: { email: 'school2@test.com', phone: '2222222222' }
+                    profileInfo: { email: 'school2@test.com', phone: '2222222222' }
                 },
                 {
                     name: 'School 3',
                     address: '789 Test Blvd',
-                    contactInfo: { email: 'school3@test.com', phone: '3333333333' }
+                    profileInfo: { email: 'school3@test.com', phone: '3333333333' }
                 }
             ]);
         });
@@ -228,7 +228,7 @@ describe('School Integration Tests', () => {
             const updateData = {
                 schoolId: testSchool._id.toString(),
                 name: 'Admin Updated Name',
-                contactInfo: {
+                profileInfo: {
                     email: 'updated@school.com'
                 }
             };

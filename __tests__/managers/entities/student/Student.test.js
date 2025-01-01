@@ -33,7 +33,7 @@ describe('Student Integration Tests', () => {
         testSchool = await SchoolModel.create({
             name: 'Test School',
             address: '123 Test St',
-            contactInfo: {
+            profileInfo: {
                 email: 'test@school.com',
                 phone: '1234567890'
             }
@@ -168,7 +168,7 @@ describe('Student Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '456 Other St',
-                contactInfo: { email: 'other@school.com', phone: '9876543210' }
+                profileInfo: { email: 'other@school.com', phone: '9876543210' }
             });
 
             const otherStudent = await StudentModel.create({
@@ -240,7 +240,7 @@ describe('Student Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '456 Other St',
-                contactInfo: { email: 'other@school.com', phone: '9876543210' }
+                profileInfo: { email: 'other@school.com', phone: '9876543210' }
             });
 
             const otherStudent = await StudentModel.create({
@@ -265,7 +265,7 @@ describe('Student Integration Tests', () => {
             const newSchool = await SchoolModel.create({
                 name: 'New School',
                 address: '789 New St',
-                contactInfo: { email: 'new@school.com', phone: '5555555555' }
+                profileInfo: { email: 'new@school.com', phone: '5555555555' }
             });
 
             const response = await request(baseUrl)
@@ -287,7 +287,7 @@ describe('Student Integration Tests', () => {
             const newSchool = await SchoolModel.create({
                 name: 'New School',
                 address: '789 New St',
-                contactInfo: { email: 'new@school.com', phone: '5555555555' }
+                profileInfo: { email: 'new@school.com', phone: '5555555555' }
             });
 
             const response = await request(baseUrl)
@@ -359,7 +359,7 @@ describe('Student Integration Tests', () => {
             const otherSchool = await SchoolModel.create({
                 name: 'Other School',
                 address: '456 Other St',
-                contactInfo: { email: 'other@school.com', phone: '9876543210' }
+                profileInfo: { email: 'other@school.com', phone: '9876543210' }
             });
 
             const otherClassroom = await ClassroomModel.create({

@@ -25,7 +25,7 @@ describe('Auth Integration Tests', () => {
     testSchool = await SchoolModel.create({
       name: 'Test School',
       address: '123 Test St',
-      contactInfo: {
+      profileInfo: {
         email: 'school@test.com',
         phone: '1234567890'
       }
