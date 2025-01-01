@@ -17,8 +17,8 @@ erDiagram
         ObjectId *id PK
         String name
         String address
-        String profileInfo.email
-        String profileInfo.phone
+        String profileInfoEmail
+        String profileInfoPhone
         Date createdAt
         Date updatedAt
     }
