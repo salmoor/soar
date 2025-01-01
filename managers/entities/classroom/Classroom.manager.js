@@ -8,7 +8,6 @@ module.exports = class ClassroomManager {
         this.student = mongomodels.student;
         this.school = mongomodels.school;
 
-        // Expose HTTP endpoints
         this.httpExposed = [
             'post=createClassroom',
             'get=getClassroom',
@@ -20,7 +19,6 @@ module.exports = class ClassroomManager {
         ];
     }
 
-    // Create a new classroom
     async createClassroom({ ...requestData }) {
         try {
             const validator = this.validators.classroom.createClassroom;
@@ -43,9 +41,7 @@ module.exports = class ClassroomManager {
                 ...(requestData.schoolId && { schoolId: requestData.schoolId })
             };
 
-            // Create new classroom
             const classroom = new this.classroom(classroomData);
-
             const savedClassroom = await classroom.save();
 
             return {
@@ -60,7 +56,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Get a specific classroom
     async getClassroom({ __query }) {
         try {
             const classroom = await this.classroom.findById(__query.classroomId);
@@ -80,7 +75,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Get all classrooms for a school
     async getAllClassrooms({ __query }) {
         try {
             const schoolId = __query.schoolId;
@@ -115,7 +109,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Update a classroom
     async updateClassroom({ classroomId, ...requestData }) {
         try {
             const classroom = await this.classroom.findById(classroomId);
@@ -160,7 +153,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Delete a classroom
     async deleteClassroom({ __query }) {
         try {
             const classroom = await this.classroom.findById(__query.classroomId);
@@ -186,7 +178,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Manage classroom capacity
     async manageCapacity({ classroomId, newCapacity }) {
         try {
             const classroom = await this.classroom.findById(classroomId);
@@ -194,7 +185,6 @@ module.exports = class ClassroomManager {
                 return { error: 'Classroom not found' };
             }
 
-            // Validate new capacity
             if (newCapacity <= 0) {
                 return { error: 'New capacity must be greater than 0' };
             }
@@ -220,7 +210,6 @@ module.exports = class ClassroomManager {
         }
     }
 
-    // Manage classroom resources
     async manageResources({ classroomId, action, resources }) {
         try {
             const classroom = await this.classroom.findById(classroomId);
@@ -230,15 +219,12 @@ module.exports = class ClassroomManager {
 
             switch (action) {
                 case 'add':
-                    // Add new resources while avoiding duplicates
                     classroom.resources = [...new Set([...classroom.resources, ...resources])];
                     break;
                 case 'remove':
-                    // Remove specified resources
                     classroom.resources = classroom.resources.filter(r => !resources.includes(r));
                     break;
                 case 'set':
-                    // Replace all resources
                     classroom.resources = resources;
                     break;
                 default:
