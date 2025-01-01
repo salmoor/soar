@@ -20,6 +20,12 @@ module.exports = ({ managers, mongomodels }) => {
             requestedSchoolId = classroom.schoolId.toString();
         }
 
+        if ((req.query.studentId || req.body.studentId) && !requestedSchoolId) {
+            const studentId = req.query.studentId || req.body.studentId;
+            const student = await mongomodels.student.findById(studentId);
+            requestedSchoolId = student.schoolId.toString();
+        }
+
         if (!requestedSchoolId || user.schoolId.toString() !== requestedSchoolId) {
             return managers.responseDispatcher.dispatch(res, {
                 ok: false,

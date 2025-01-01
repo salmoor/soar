@@ -49,8 +49,15 @@ module.exports = class StudentManager {
             const savedStudent = await student.save();
 
             return {
-                message: 'Student created successfully',
-                data: savedStudent
+                _id: savedStudent._id,
+                firstName: savedStudent.firstName,
+                lastName: savedStudent.lastName,
+                email: savedStudent.email,
+                schoolId: savedStudent.schoolId,
+                classroomId: savedStudent.classroomId,
+                grade: savedStudent.grade,
+                dateOfBirth: savedStudent.dateOfBirth,
+                transferHistory: savedStudent.transferHistory
             };
         } catch (error) {
             console.error('Create student error:', error);
@@ -62,12 +69,8 @@ module.exports = class StudentManager {
     }
 
     // Get a specific student
-    async getStudent({ __longToken, __query }) {
+    async getStudent({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const student = await this.student.findById(__query.studentId)
                 .populate('schoolId', 'name')
                 .populate('classroomId', 'name');
@@ -76,12 +79,17 @@ module.exports = class StudentManager {
                 return { error: 'Student not found' };
             }
 
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== student.schoolId.toString()) {
-                return { error: 'Unauthorized - Access denied to this student' };
-            }
-
-            return { data: student };
+            return {
+                _id: student._id,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                email: student.email,
+                schoolId: student.schoolId,
+                classroomId: student.classroomId,
+                grade: student.grade,
+                dateOfBirth: student.dateOfBirth,
+                transferHistory: student.transferHistory
+            };
         } catch (error) {
             console.error('Get student error:', error);
             return { error: 'Failed to fetch student' };
@@ -89,18 +97,9 @@ module.exports = class StudentManager {
     }
 
     // Get all students for a school
-    async getAllStudents({ __longToken, __query }) {
+    async getAllStudents({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const schoolId = __query.schoolId;
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== schoolId) {
-                return { error: 'Unauthorized - Can only view students from your school' };
-            }
 
             const page = parseInt(__query.page) || 1;
             const limit = parseInt(__query.limit) || 10;
@@ -121,7 +120,7 @@ module.exports = class StudentManager {
             const total = await this.student.countDocuments(filter);
 
             return {
-                data: students,
+                students,
                 pagination: {
                     current: page,
                     limit,
@@ -135,20 +134,11 @@ module.exports = class StudentManager {
         }
     }
 
-    async updateStudent({ __longToken, studentId, ...requestData }) {
+    async updateStudent({ studentId, ...requestData }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
-            }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== student.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only update students from your school' };
             }
 
             const validator = this.validators.student.updateStudent;
@@ -179,8 +169,15 @@ module.exports = class StudentManager {
             );
 
             return {
-                message: 'Student updated successfully',
-                data: updatedStudent
+                _id: updatedStudent._id,
+                firstName: updatedStudent.firstName,
+                lastName: updatedStudent.lastName,
+                email: updatedStudent.email,
+                schoolId: updatedStudent.schoolId,
+                classroomId: updatedStudent.classroomId,
+                grade: updatedStudent.grade,
+                dateOfBirth: updatedStudent.dateOfBirth,
+                transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
             console.error('Update student error:', error);
@@ -189,28 +186,25 @@ module.exports = class StudentManager {
     }
 
     // Delete a student
-    async deleteStudent({ __longToken, __query }) {
+    async deleteStudent({ __query }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const student = await this.student.findById(__query.studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
 
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== student.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only delete students from your school' };
-            }
-
-            // Perform hard delete
             await this.student.findByIdAndDelete(__query.studentId);
 
             return {
-                message: 'Student deleted successfully',
-                data: { id: __query.studentId }
+                _id: student._id,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                email: student.email,
+                schoolId: student.schoolId,
+                classroomId: student.classroomId,
+                grade: student.grade,
+                dateOfBirth: student.dateOfBirth,
+                transferHistory: student.transferHistory
             };
         } catch (error) {
             console.error('Delete student error:', error);
@@ -219,25 +213,13 @@ module.exports = class StudentManager {
     }
 
     // Transfer student to another school
-    async transferStudent({ __longToken, studentId, toSchoolId, reason }) {
+    async transferStudent({ studentId, toSchoolId, reason }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
             }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin') {
-                if (__longToken.schoolId !== student.schoolId.toString() && 
-                    __longToken.schoolId !== toSchoolId) {
-                    return { error: 'Unauthorized - Can only transfer students to/from your school' };
-                }
-            }
-
+            
             // Add transfer record
             student.transferHistory.push({
                 fromSchool: student.schoolId,
@@ -252,8 +234,15 @@ module.exports = class StudentManager {
             const updatedStudent = await student.save();
 
             return {
-                message: 'Student transferred successfully',
-                data: updatedStudent
+                _id: updatedStudent._id,
+                firstName: updatedStudent.firstName,
+                lastName: updatedStudent.lastName,
+                email: updatedStudent.email,
+                schoolId: updatedStudent.schoolId,
+                classroomId: updatedStudent.classroomId,
+                grade: updatedStudent.grade,
+                dateOfBirth: updatedStudent.dateOfBirth,
+                transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
             console.error('Transfer student error:', error);
@@ -262,20 +251,11 @@ module.exports = class StudentManager {
     }
 
     // Enroll student in a classroom
-    async enrollStudent({ __longToken, studentId, classroomId }) {
+    async enrollStudent({ studentId, classroomId }) {
         try {
-            if (!__longToken) {
-                return { error: 'Authentication required' };
-            }
-
             const student = await this.student.findById(studentId);
             if (!student) {
                 return { error: 'Student not found' };
-            }
-
-            // Verify authorization
-            if (__longToken.role === 'schoolAdmin' && __longToken.schoolId !== student.schoolId.toString()) {
-                return { error: 'Unauthorized - Can only manage students from your school' };
             }
 
             // Verify classroom exists and belongs to the same school
@@ -290,7 +270,6 @@ module.exports = class StudentManager {
             // Check classroom capacity
             const currentStudentsCount = await this.student.countDocuments({
                 classroomId,
-                status: 'active'
             });
 
             if (currentStudentsCount >= classroom.capacity) {
@@ -302,8 +281,15 @@ module.exports = class StudentManager {
             const updatedStudent = await student.save();
 
             return {
-                message: 'Student enrolled successfully',
-                data: updatedStudent
+                _id: updatedStudent._id,
+                firstName: updatedStudent.firstName,
+                lastName: updatedStudent.lastName,
+                email: updatedStudent.email,
+                schoolId: updatedStudent.schoolId,
+                classroomId: updatedStudent.classroomId,
+                grade: updatedStudent.grade,
+                dateOfBirth: updatedStudent.dateOfBirth,
+                transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
             console.error('Enroll student error:', error);
