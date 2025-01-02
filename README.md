@@ -2,18 +2,20 @@
 
 ## Technical Overview
 
-### Field validations
+### Validations
+
+#### Field validations
 - Builds on top of the existing validation framework.
 - Schemas are defined in .schema.js files.
 - Uses HTTP status code 422 for validation errors
 
-### Business Logic validations
+#### Business Logic validations, examples include
 - Checking classroom capacity before enrollment
 - Ensuring classroom belongs to correct school
 - Checking if classroom has students before deletion
 - Checking if school has classrooms before deletion
 
-### MongoDB Schema Validation
+#### MongoDB Schema Validation
 - Validation layer at the database level using Mongoose schemas
 - Defined in .model.js files
 
@@ -26,15 +28,14 @@
 - 422: Validation errors
 - 429: Rate limiting errors
 
-
 ### Database Schema
-Documented in detail at [Database Schema Documentation](./docs/database.md).
+- Documented in detail at [Database Schema Documentation](./docs/database.md).
 
 ### Security Measures
-- Authentication middleware implemented in [__authenicate.mw.js](./mws/__authenicate.mw.js)
+- Authentication middleware implemented in [__authenticate.mw.js](./mws/__authenticate.mw.js)
 - Authorization middleware implemented in [__authorize.mw.js](./mws/__authorize.mw.js)
 - Rate limiting middleware implemented in [__rateLimit.mw.js](./mws/__rateLimit.mw.js)
-- Helmet is added to the app
+- [helmet](https://github.com/helmetjs/helmet) is added to the express app
 
 ### API documentation
 - API documentation is available at [https://salmoor.github.io/soar/](https://salmoor.github.io/soar/)
@@ -58,7 +59,7 @@ Documented in detail at [Database Schema Documentation](./docs/database.md).
 1. **Clone the Repository**
    ```bash
    git clone git@github.com:salmoor/soar.git
-   cd school-management-system
+   cd soar
    ```
 
 2. **Install Dependencies**
@@ -234,7 +235,7 @@ Documented in detail at [Database Schema Documentation](./docs/database.md).
 2. **HTTPS**
    - SSL certificates are provided by Let's Encrypt
    - Nginx is configured to use HTTPS
-   - Nginx is configured to redirect HTTP to https
+   - Nginx is configured to redirect HTTP to HTTPS
 
 3. **Rate Limiting**
    - The application includes built-in rate limiting via `__rateLimit.mw.js` middleware
