@@ -43,6 +43,19 @@ module.exports = class StudentManager {
                 ...(requestData.dateOfBirth && { dateOfBirth: new Date(requestData.dateOfBirth) })
             };
 
+            if (requestData.classroomId) {
+                const classroom = await this.classroom.findById(requestData.classroomId);
+                if (classroom) {
+                    const currentStudentsCount = await this.student.countDocuments({
+                        classroomId: classroom._id
+                    })
+
+                    if (currentStudentsCount >= classroom.capacity) {
+                        return { error: 'Classroom is full' };
+                    }
+                }
+            }
+
             const student = new this.student(studentData);
             const savedStudent = await student.save();
 
@@ -212,7 +225,7 @@ module.exports = class StudentManager {
             if (!student) {
                 return { error: 'Student not found' };
             }
-            
+
             student.transferHistory.push({
                 fromSchool: student.schoolId,
                 toSchool: toSchoolId,

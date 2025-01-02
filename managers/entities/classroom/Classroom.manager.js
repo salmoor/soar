@@ -48,7 +48,8 @@ module.exports = class ClassroomManager {
                 _id: savedClassroom._id,
                 name: savedClassroom.name,
                 capacity: savedClassroom.capacity,
-                resources: savedClassroom.resources
+                resources: savedClassroom.resources,
+                schoolId: savedClassroom.schoolId
             };
         } catch (error) {
             console.error('Create classroom error:', error);
@@ -67,7 +68,8 @@ module.exports = class ClassroomManager {
                 _id: classroom._id,
                 name: classroom.name,
                 capacity: classroom.capacity,
-                resources: classroom.resources
+                resources: classroom.resources,
+                schoolId: classroom.schoolId
             };
         } catch (error) {
             console.error('Get classroom error:', error);
@@ -145,7 +147,8 @@ module.exports = class ClassroomManager {
                 _id: updatedClassroom._id,
                 name: updatedClassroom.name,
                 capacity: updatedClassroom.capacity,
-                resources: updatedClassroom.resources
+                resources: updatedClassroom.resources,
+                schoolId: updatedClassroom.schoolId
             };
         } catch (error) {
             console.error('Update classroom error:', error);
@@ -169,8 +172,11 @@ module.exports = class ClassroomManager {
             await this.classroom.findByIdAndDelete(__query.classroomId);
 
             return {
-                message: 'Classroom deleted successfully',
-                data: classroom
+                _id: classroom._id,
+                name: classroom.name,
+                capacity: classroom.capacity,
+                resources: classroom.resources,
+                schoolId: classroom.schoolId
             };
         } catch (error) {
             console.error('Delete classroom error:', error);
@@ -202,7 +208,8 @@ module.exports = class ClassroomManager {
                 _id: classroom._id,
                 name: classroom.name,
                 capacity: classroom.capacity,
-                resources: classroom.resources
+                resources: classroom.resources,
+                schoolId: classroom.schoolId
             };
         } catch (error) {
             console.error('Manage capacity error:', error);
@@ -237,7 +244,8 @@ module.exports = class ClassroomManager {
                 _id: classroom._id,
                 name: classroom.name,
                 capacity: classroom.capacity,
-                resources: classroom.resources
+                resources: classroom.resources,
+                schoolId: classroom.schoolId
             };
         } catch (error) {
             console.error('Manage resources error:', error);
