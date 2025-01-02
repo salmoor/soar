@@ -1,6 +1,52 @@
-# School Management System API - Deployment Instructions
+# School Management System API
 
-## Prerequisites
+## Technical Overview
+
+### Field validations
+- Builds on top of the existing validation framework.
+- Schemas are defined in .schema.js files.
+- Uses HTTP status code 422 for validation errors
+
+### Business Logic validations
+- Checking classroom capacity before enrollment
+- Ensuring classroom belongs to correct school
+- Checking if classroom has students before deletion
+- Checking if school has classrooms before deletion
+
+### MongoDB Schema Validation
+- Validation layer at the database level using Mongoose schemas
+- Defined in .model.js files
+
+### Error handling and appropriate HTTP status codes
+- 200: Successful operations
+- 400: Bad requests and general errors
+- 401: Authentication errors (missing/invalid tokens)
+- 403: Authorization/permission errors
+- 404: Resource not found
+- 422: Validation errors
+- 429: Rate limiting errors
+
+
+### Database Schema
+Documented in detail at [Database Schema Documentation](./docs/database.md).
+
+### Security Measures
+- Authentication middleware implemented in [__authenicate.mw.js](./mws/__authenicate.mw.js)
+- Authorization middleware implemented in [__authorize.mw.js](./mws/__authorize.mw.js)
+- Rate limiting middleware implemented in [__rateLimit.mw.js](./mws/__rateLimit.mw.js)
+- Helmet is added to the app
+
+### API documentation
+- API documentation is available at [https://salmoor.github.io/soar/](https://salmoor.github.io/soar/)
+
+### Testing
+- Tests are implemented in [__tests__ directory](./__tests__) using Jest
+- Test cases are documented in [Testing Documentation](./docs/testing.md)
+
+### Authentication flow
+- Authentication flow is documented in [Authentication Flow Documentation](./docs/auth-flow.md)
+
+## Local Development Setup Requirements
 
 - Node.js (v14 or higher)
 - MongoDB (v4.4 or higher)
@@ -12,7 +58,7 @@
 1. **Clone the Repository**
    ```bash
    git clone git@github.com:salmoor/soar.git
-   cd soar
+   cd school-management-system
    ```
 
 2. **Install Dependencies**
