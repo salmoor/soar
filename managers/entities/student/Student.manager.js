@@ -68,6 +68,7 @@ module.exports = class StudentManager {
                 classroomId: savedStudent.classroomId,
                 grade: savedStudent.grade,
                 dateOfBirth: savedStudent.dateOfBirth,
+                enrollmentDate: savedStudent.enrollmentDate,
                 transferHistory: savedStudent.transferHistory
             };
         } catch (error) {
@@ -98,6 +99,7 @@ module.exports = class StudentManager {
                 classroomId: student.classroomId,
                 grade: student.grade,
                 dateOfBirth: student.dateOfBirth,
+                enrollmentDate: student.enrollmentDate,
                 transferHistory: student.transferHistory
             };
         } catch (error) {
@@ -185,6 +187,7 @@ module.exports = class StudentManager {
                 classroomId: updatedStudent.classroomId,
                 grade: updatedStudent.grade,
                 dateOfBirth: updatedStudent.dateOfBirth,
+                enrollmentDate: updatedStudent.enrollmentDate,
                 transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
@@ -211,6 +214,7 @@ module.exports = class StudentManager {
                 classroomId: student.classroomId,
                 grade: student.grade,
                 dateOfBirth: student.dateOfBirth,
+                enrollmentDate: student.enrollmentDate,
                 transferHistory: student.transferHistory
             };
         } catch (error) {
@@ -246,6 +250,7 @@ module.exports = class StudentManager {
                 classroomId: updatedStudent.classroomId,
                 grade: updatedStudent.grade,
                 dateOfBirth: updatedStudent.dateOfBirth,
+                enrollmentDate: updatedStudent.enrollmentDate,
                 transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
@@ -289,6 +294,7 @@ module.exports = class StudentManager {
                 classroomId: updatedStudent.classroomId,
                 grade: updatedStudent.grade,
                 dateOfBirth: updatedStudent.dateOfBirth,
+                enrollmentDate: updatedStudent.enrollmentDate,
                 transferHistory: updatedStudent.transferHistory
             };
         } catch (error) {
