@@ -30,6 +30,7 @@ module.exports = ({ cache, managers }) => {
                 await cache.key.set({
                     key: rateLimitKey,
                     data: (currentCount + 1).toString(),
+                    ttl: WINDOW_SIZE_IN_SECONDS
                 });
             }
 
